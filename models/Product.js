@@ -29,7 +29,10 @@ Product.init(
       defaultValue: 10,
       // Validate value as numeric
     },
-
+    category_id: {
+      type: DataTypes.INTEGER,
+      // Reference the Category IDs
+    }
   },
   {
     sequelize,
