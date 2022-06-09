@@ -21,8 +21,12 @@ ProductTag.init(
       }
     },
     tag_id: {
-      type: DataType.INTEGER
-      // Reference here
+      type: DataType.INTEGER,
+      references: {
+        model: 'tag',
+        key: 'id',
+        unique: false
+      }
     }
   },
   {
