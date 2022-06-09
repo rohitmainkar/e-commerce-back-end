@@ -23,8 +23,13 @@ Product.init(
       type: DataTypes.DECIMAL,
       allowNull:false
       // Validate that type is a decimal
+    },
+    stock: {
+      type: DataTypes.INTEGER,
+      defaultValue: 10,
+      // Validate value as numeric
+    },
 
-    }
   },
   {
     sequelize,
