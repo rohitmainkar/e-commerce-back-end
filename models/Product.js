@@ -23,6 +23,7 @@ Product.init(
       type: DataTypes.DECIMAL,
       allowNull:false
       // Validate that type is a decimal
+
     }
   },
   {
