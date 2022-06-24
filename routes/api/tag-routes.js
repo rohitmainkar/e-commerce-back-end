@@ -7,9 +7,13 @@ const { Tag, Product, ProductTag } = require('../../models');
 // Also return the associated product data.
 router.get('/', async (req, res) => {
   try {
-    const tagData = Tag.findAll({
+    const tagData = await Tag.findAll({
       include: [{ model: Product}]
     });
+
+    if (!tagData) {
+      return res.status(404).json({message:"No tag data found."})
+    }
 
     res.status(200).json(tagData);
   } catch (err) {
@@ -21,7 +25,7 @@ router.get('/', async (req, res) => {
 // Also include data for associated product(s).
 router.get('/:id', async (req, res) => {
    try {
-    const tagData = Tag.findByPk(req.params.id, {
+    const tagData = await Tag.findByPk(req.params.id, {
       include: [{ model: Product}]
     });
 
@@ -64,7 +68,7 @@ router.put('/:id', async (req, res) => {
 // DELETE request with id: destroys the tag with this id, and all of its data.
 router.delete('/:id', async (req, res) => {
   try {
-    const tagData = Tag.destroy({
+    const tagData = await Tag.destroy({
       where: {
         id: req.params.id
       }
