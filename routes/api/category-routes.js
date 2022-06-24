@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const { Category, Product } = require("../../models");
 
+// Endpoint for all api/categories/ requests.
+
 // GET request without id: retrieves all existing Category data.
 // Also retrieves all associated products.
 router.get("/", async (req, res) => {
