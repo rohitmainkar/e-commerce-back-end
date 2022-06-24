@@ -35,14 +35,22 @@ router.get('/:id', (req, res) => {
   }
 });
 
+// POST request: creates a new Tag with the request body data.
 router.post('/', (req, res) => {
-  // create a new tag
+  try {
+    const tagData = await Tag.create(req.body);
+    res.status(200).json(tagData);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
+// PUT request with id: update the tag with this id with the request body data.
 router.put('/:id', (req, res) => {
   // update a tag's name by its `id` value
 });
 
+// DELETE request with id: destroys the tag with this id, and all of its data.
 router.delete('/:id', (req, res) => {
   // delete on tag by its `id` value
 });
