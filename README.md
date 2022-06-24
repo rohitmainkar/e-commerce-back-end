@@ -1,5 +1,10 @@
 # E-Commerce Back-End
 <img src="https://img.shields.io/badge/license-MIT-green.svg">
+
+## Demonstration Video
+Here is a short demonstration video showing the installation of this API and testing all of the routes. It is in two parts:  
+Part one: https://drive.google.com/file/d/1aOu8C_QRSANT5VVN8pRqWK3LP50m4ZN2/view  
+Part two: https://drive.google.com/file/d/1C7Ar-7DfsOeLwtQZylohSqmrsCxeYG9u/view
     
 ## Description
 This is the back-end for an e-commerce store that sells clothing, sports items and music. The server is built in Express.js and the database is MySQL. Sequelize is used to model the data and the relationships in the database. There are a large number of routes to allow the creation of new products, assign them to categories, and tag them with a variety of product tags to make sorting them easier.
