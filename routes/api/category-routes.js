@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const { Category, Product } = require("../../models");
 
-// GET request with no id, retrieves all Category data with associated products
+// GET request without id: retrieves all existing Category data.
+// Also retrieves all associated products.
 router.get("/", async (req, res) => {
   try {
     const categoryData = await Category.findAll({
@@ -13,6 +14,8 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET request with an id: retrieves Category data with specific id.
+// Also retrieves all associated products.
 router.get("/:id", async (req, res) => {
   try {
     const categoryData = await Category.findByPk(req.params.id, {
@@ -31,6 +34,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// POST request: creates a new Category with the  request body data.
 router.post("/", async (req, res) => {
   try {
     const categoryData = await Category.create(req.body);
@@ -40,6 +44,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT request with an id: updates this category with the request body data.
 router.put("/:id", async (req, res) => {
   try {
     const categoryData = await Category.findByPk(req.params.id);
@@ -57,6 +62,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// DELETE request with id: destroys the data for the category with this id.
 router.delete("/:id", async (req, res) => {
   try {
     const categoryData = await Category.destroy({
