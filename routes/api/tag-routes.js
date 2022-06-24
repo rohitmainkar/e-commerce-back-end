@@ -47,7 +47,18 @@ router.post('/', (req, res) => {
 
 // PUT request with id: update the tag with this id with the request body data.
 router.put('/:id', (req, res) => {
-  // update a tag's name by its `id` value
+  try {
+    const tagData = await Tag.findByPk(req.params.id);
+
+    if (!tagData) {
+      res.status(404).json({message: "No tag with this ID can be found."});
+    }
+    tagData.update(req.body);
+    res.status(400).json(tagData);
+
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 // DELETE request with id: destroys the tag with this id, and all of its data.
