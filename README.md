@@ -20,8 +20,15 @@ This is the back-end for an e-commerce store that sells clothing, sports items a
 * [Questions](#questions)
     
 ## Installation
-This repository can be cloned from GitHub and then used as the foundations to build a functional e-commerce website. Once installed, open MySQL and run db/schema.sql to set up the database. Exit MySQL and seed the database using the command line command 'npm run seed'. Start the database using the command 'npm start' or use nodemon for a development server.
-
+To use this API as the foundations for an e-commerce back-end, you will need to do the following:
+ - Set up MySQL ( I used a docker container )
+ - Clone the repository
+ - Install all packages ( 'npm install' )
+ - Create a .env file with the database name, user and password and store securely
+ - Open the MySQL CLI in the correct directory and run `source db/schema.sql` to set up the database
+ - Run `npm run seed` to seed the database
+ - Run `npm start` to test if setup is working
+ 
 ## Usage
 There are a number of routes set up to query the database: a user can create, retrieve, update and delete (CRUD) three different models of data: the product, the category, and the tags. A more in depth showcase of the different routes that have been set up can be found in the demonstration video.
 
