@@ -6,9 +6,9 @@ const verifyToken = require('../middleware/authenticateToken');
 const path = require('path');
 const cors = require('cors')
 
-router.use('/api', apiRoutes,);
-router.use('/autho', protectedApi);
-router.use(cors());
+router.use('/api',cors(), apiRoutes,);
+router.use('/autho',cors(), protectedApi);
+// router.use(cors());
 
 
 // Serve static files from the "uploads" folder
