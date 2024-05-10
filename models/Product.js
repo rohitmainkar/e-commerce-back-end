@@ -15,10 +15,12 @@ Product.init(
       primaryKey: true,
       autoIncrement: true
     },
+
     product_name: {
       type: DataTypes.STRING,
       allowNull: false
     },
+
     price: {
       type: DataTypes.DECIMAL,
       allowNull:false,
@@ -26,6 +28,7 @@ Product.init(
         isDecimal: true
       }
     },
+
     stock: {
       type: DataTypes.INTEGER,
       defaultValue: 10,
@@ -33,6 +36,27 @@ Product.init(
         isNumeric: true
       }
     },
+
+    primaryImage:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+
+    hoverImg:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+
+    stars:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+
+    descr:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    
     category_id: {
       type: DataTypes.INTEGER,
       references: {
@@ -48,6 +72,7 @@ Product.init(
     underscored: true,
     modelName: 'product',
   }
+  
 );
 
 module.exports = Product;

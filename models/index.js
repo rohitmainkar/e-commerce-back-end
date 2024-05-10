@@ -3,6 +3,7 @@ const Product = require('./Product');
 const Category = require('./Category');
 const Tag = require('./Tag');
 const ProductTag = require('./ProductTag');
+const Images = require('./Images');
 
 // Products belongsTo Category
 Product.belongsTo(Category, {
@@ -31,9 +32,19 @@ Tag.belongsToMany(Product, {
   }
 })
 
+// // Images belong to Products
+// Images.belongsTo(Product, {
+//   foreignKey: 'productId',
+// });
+
+// Images.hsMany(Product, {
+//   foreignKey: 'product_id',
+// })
+
 module.exports = {
   Product,
   Category,
   Tag,
   ProductTag,
+  Images,
 };

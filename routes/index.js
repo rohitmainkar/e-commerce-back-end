@@ -1,10 +1,27 @@
 const router = require('express').Router();
-const apiRoutes = require('./api');
+const express = require('express');
+const apiRoutes = require('./protected_api');
+const protectedApi = require('./unprotected_api');
+const verifyToken = require('../middleware/authenticateToken');
+const path = require('path');
+const cors = require('cors')
 
-router.use('/api', apiRoutes);
+router.use('/api', apiRoutes,);
+router.use('/autho', protectedApi);
+
+
+
+// Serve static files from the "uploads" folder
+router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  setHeaders: (res, filePath) => {
+      res.setHeader('Content-Type', 'image/jpeg');
+  }
+}));
+
 
 router.use((req, res) => {
   res.send("<h1>Wrong Route!</h1>")
 });
+router.use(cors());
 
 module.exports = router;
