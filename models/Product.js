@@ -37,16 +37,6 @@ Product.init(
       }
     },
 
-    primaryImage:{
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-
-    hoverImg:{
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-
     stars:{
       type: DataTypes.STRING,
       allowNull: true

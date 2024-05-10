@@ -117,10 +117,6 @@ router.delete('/images/:view/:productId', async (req, res) => {
 });
 
 
-
-
-
-
 router.get("/", async (req, res) => {
   try {
     const productData = await sequelize.query(
@@ -204,29 +200,7 @@ router.post("/category", async (req, res) => {
 
 
 
-router.post("/", (req, res) => {
 
-  Product.create(req.body)
-    .then((product) => {
-      // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-      if (req.body.tagIds.length) {
-        const productTagIdArr = req.body.tagIds.map((tag_id) => {
-          return {
-            product_id: product.id,
-            tag_id,
-          };
-        });
-        return ProductTag.bulkCreate(productTagIdArr);
-      }
-      // if no product tags, just respond
-      res.status(200).json(product);
-    })
-    .then((productTagIds) => res.status(200).json(productTagIds))
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json(err);
-    });
-});
 
 // PUT request with id: update product data for the product with this id.
 router.put("/:id", (req, res) => {
@@ -288,5 +262,78 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+
+
+
+
+
+
+
+
+router.post('/save', upload.array('image', 5), async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { category_id, views } = req.body;
+    const uploadedImages = req.files;
+
+    // Check if required fields are provided
+    if (!uploadedImages || !views) {
+      return res.status(400).json({ message: 'Invalid request data.' });
+    }
+
+    // Split the views and project details strings into arrays
+    const viewsArray = views.split(',');
+
+    // Check if the number of views matches the number of uploaded images
+    if (viewsArray.length !== uploadedImages.length) {
+      return res.status(400).json({ message: 'Number of views does not match the number of uploaded images.' });
+    }
+
+    // Save the product details directly from req.body within the transaction
+    const savedProduct = await Product.create(
+      req.body ,
+      { transaction }
+    );
+    const productId = savedProduct.id; // Get the generated productId
+
+    // Process each uploaded image along with its view type and project detail within the transaction
+    const savedImages = await Promise.all(uploadedImages.map((uploadedImage, index) => {
+      const view = viewsArray[index];
+
+      if (!view || isNaN(index) || index < 0) {
+        return Promise.reject('Invalid view data for an image.');
+      }
+
+      const unixFilePath = uploadedImage.path.replace(/\\/g, '/');
+
+      // Save the uploaded image data to the database using the Images model within the transaction
+      return Images.create({
+        product_id: productId,
+        category_id,
+        view,
+        image_url: unixFilePath,
+      }, { transaction });
+    }));
+
+    // Commit the transaction if everything succeeds
+    await transaction.commit();
+
+    res.status(200).json({ message: 'Images uploaded successfully.', data: savedImages });
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Rollback the transaction if an error occurs
+    await transaction.rollback();
+
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+
+
+
+
 
 module.exports = router;

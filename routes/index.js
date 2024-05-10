@@ -8,7 +8,7 @@ const cors = require('cors')
 
 router.use('/api', apiRoutes,);
 router.use('/autho', protectedApi);
-
+router.use(cors());
 
 
 // Serve static files from the "uploads" folder
@@ -22,6 +22,6 @@ router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
 router.use((req, res) => {
   res.send("<h1>Wrong Route!</h1>")
 });
-router.use(cors());
+
 
 module.exports = router;
