@@ -12,18 +12,69 @@ Category.init(
       primaryKey: true,
       autoIncrement: true
     },
-    category_name: {
+    categoryName: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    displayIndex: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
     }
   },
   {
     sequelize,
     timestamps: false,
     freezeTableName: true,
-    underscored: true,
     modelName: 'category',
   }
 );
+class SubCategory extends Model {}
 
-module.exports = Category;
+SubCategory.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    subCategoryName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    displayIndex: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+
+    }
+  },
+  {
+    sequelize,
+    timestamps: false,
+    freezeTableName: true,
+    modelName: 'subCategory',
+  }
+);
+
+
+
+SubCategory.belongsTo(Category, {
+  foreignKey: 'categoryId',
+});
+
+// Categories have many SubCategories
+Category.hasMany(SubCategory, {
+  foreignKey: 'categoryId',
+  onDelete: 'CASCADE'
+});
+module.exports = {Category,SubCategory};

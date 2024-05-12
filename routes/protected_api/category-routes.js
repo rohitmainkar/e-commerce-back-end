@@ -1,3 +1,4 @@
+
 const router = require("express").Router();
 const { Category, Product } = require("../../models");
 
@@ -82,5 +83,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json(err);
   };
 });
+
+
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { Product, Category, Tag, ProductTag, Images } = require("../../models");
+const { Product, Category,SubCategory, Tag, ProductTag, Images } = require("../../models");
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -117,61 +117,6 @@ router.delete('/images/:view/:productId', async (req, res) => {
 });
 
 
-router.get("/", async (req, res) => {
-  try {
-    const productData = await sequelize.query(
-       `SELECT 
-       P.id AS product_id,
-       P.product_name,
-       P.price,
-       P.stock,
-       CONCAT('http://192.168.1.196:5000/', T.image_url) AS top_view,
-       CONCAT('http://192.168.1.196:5000/', F.image_url) AS front_view
-   FROM 
-       Product AS P
-   INNER JOIN 
-       Images AS T ON P.id = T.product_id AND T.view = 'top'
-   LEFT JOIN 
-       Images AS F ON P.id = F.product_id AND F.view = 'front';
-        `, { type: Sequelize.QueryTypes.SELECT }
-    );
-
-    if (!productData || productData.length === 0) {
-      return res.status(404).json({ message: "No product data found." });
-    }
-
-    if (!productData || productData.length === 0) {
-      return res.status(404).json({ message: "No product data found." });
-    }
-
-    res.json(productData);
-  } catch (err) {
-    console.error(err); // Log the error for debugging
-    res.status(500).json({ message: "Internal server error." });
-  }
-});
-
-
-
-// GET request with id: retrieves data for product with this given id.
-// Also retrieves the associated category, and all the associated tags.
-router.get("/:id", async (req, res) => {
-  try {
-    const productData = await Product.findByPk(req.params.id, {
-      include: [{ model: Category }, { model: Tag }],
-    });
-
-    if (!productData) {
-      return res
-        .status(404)
-        .json({ message: "No product found with this ID." });
-    }
-
-    res.status(200).json(productData);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
 
 router.post("/category", async (req, res) => {
   try {
@@ -201,50 +146,58 @@ router.post("/category", async (req, res) => {
 
 
 
+// GET all products
+router.get("/", async (req, res) => {
+  try {
+    const productData = await sequelize.query(`
+      SELECT 
+        p.id,
+        p.productName,
+        p.price,
+        p.stock,
+        c.categoryName AS category,
+        sc.subcategoryName AS subCategory,
+        CONCAT('http://localhost:5000/', (SELECT image_url FROM Images WHERE productId = p.id AND view = 'top')) AS top_view,
+        CONCAT('http://localhost:5000/', (SELECT image_url FROM Images WHERE productId = p.id AND view = 'front')) AS front_view
+      FROM 
+        Product AS p
+      LEFT JOIN 
+        Category AS c ON p.categoryId = c.id
+      LEFT JOIN 
+        SubCategory AS sc ON p.subCategoryId = sc.id
+    `, { type: sequelize.QueryTypes.SELECT });
+  
+    if (!productData || productData.length === 0) {
+      return res.status(404).json({ message: "No product data found." });
+    }
 
-// PUT request with id: update product data for the product with this id.
-router.put("/:id", (req, res) => {
-  // update product data
-  Product.update(req.body, {
-    where: {
-      id: req.params.id,
-    },
-  })
-    .then((product) => {
-      // find all associated tags from ProductTag
-      return ProductTag.findAll({ where: { product_id: req.params.id } });
-    })
-    .then((productTags) => {
-      // get list of current tag_ids
-      const productTagIds = productTags.map(({ tag_id }) => tag_id);
-      // create filtered list of new tag_ids
-      const newProductTags = req.body.tagIds
-        .filter((tag_id) => !productTagIds.includes(tag_id))
-        .map((tag_id) => {
-          return {
-            product_id: req.params.id,
-            tag_id,
-          };
-        });
-      // figure out which ones to remove
-      const productTagsToRemove = productTags
-        .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
-        .map(({ id }) => id);
-
-      // run both actions
-      return Promise.all([
-        ProductTag.destroy({ where: { id: productTagsToRemove } }),
-        ProductTag.bulkCreate(newProductTags),
-      ]);
-    })
-    .then((updatedProductTags) => res.json(updatedProductTags))
-    .catch((err) => {
-      // console.log(err);
-      res.status(400).json(err);
-    });
+    res.json(productData);
+  } catch (err) {
+    console.error(err); // Log the error for debugging
+    res.status(500).json({ message: "Internal server error." });
+  }
 });
 
-// DELETE request with id: destroys the data for the product with this id.
+// GET product by id
+router.get("/:id", async (req, res) => {
+  try {
+    const productData = await Product.findByPk(req.params.id, {
+      include: [{ model: Category }, { model: Images }],
+    });
+
+    if (!productData) {
+      return res
+        .status(404)
+        .json({ message: "No product found with this ID." });
+    }
+
+    res.status(200).json(productData);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// DELETE product by id
 router.delete("/:id", async (req, res) => {
   try {
     const productData = await Product.destroy({
@@ -257,25 +210,18 @@ router.delete("/:id", async (req, res) => {
         .json({ message: "No product with this data to delete." });
     }
 
-    res.status(200).json(productData);
+    res.status(200).json({ message: "Product deleted successfully." });
   } catch (err) {
     res.status(500).json(err);
   }
 });
 
-
-
-
-
-
-
-
-
-router.post('/save', upload.array('image', 5), async (req, res) => {
+// POST create product
+router.post('/', upload.array('image', 5), async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { category_id, views } = req.body;
+    const { categoryId, views } = req.body;
     const uploadedImages = req.files;
 
     // Check if required fields are provided
@@ -310,8 +256,8 @@ router.post('/save', upload.array('image', 5), async (req, res) => {
 
       // Save the uploaded image data to the database using the Images model within the transaction
       return Images.create({
-        product_id: productId,
-        category_id,
+        productId: productId,
+        categoryId,
         view,
         image_url: unixFilePath,
       }, { transaction });
@@ -320,7 +266,83 @@ router.post('/save', upload.array('image', 5), async (req, res) => {
     // Commit the transaction if everything succeeds
     await transaction.commit();
 
-    res.status(200).json({ message: 'Images uploaded successfully.', data: savedImages });
+    res.status(200).json({ message: 'Product and images uploaded successfully.', data: { product: savedProduct, images: savedImages } });
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Rollback the transaction if an error occurs
+    await transaction.rollback();
+
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+router.put('/:id', upload.array('image', 5), async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const productId = req.params.id;
+    const { categoryId, views } = req.body;
+    const uploadedImages = req.files;
+
+    // Check if required fields are provided
+    if (!uploadedImages || !views) {
+      return res.status(400).json({ message: 'Invalid request data.' });
+    }
+
+    // Split the views and project details strings into arrays
+    const viewsArray = views.split(',');
+
+    // Check if the number of views matches the number of uploaded images
+    if (viewsArray.length !== uploadedImages.length) {
+      return res.status(400).json({ message: 'Number of views does not match the number of uploaded images.' });
+    }
+
+    // Retrieve the existing product
+    const product = await Product.findByPk(productId, { transaction });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
+
+
+         // Delete existing images for the specified views
+    if (Array.isArray(viewsArray)) {
+      for (const viewToDelete of viewsArray) {
+        const existingImages = await Images.findAll({ where: { productId, view: viewToDelete } });
+        for (const image of existingImages) {
+          // Delete file from the filesystem
+          const filePath = image.image_url.replace('http://localhost:5000/', ''); // Assuming image_url contains the absolute file path
+          fs.unlinkSync(filePath);
+        }
+        // Delete images from the database
+        await Images.destroy({ where: { productId, view: viewToDelete }, transaction });
+      }
+    }
+    
+  
+    // Process each uploaded image along with its view type and project detail within the transaction
+    const savedImages = await Promise.all(uploadedImages.map((uploadedImage, index) => {
+      const view = viewsArray[index];
+
+      if (!view || isNaN(index) || index < 0) {
+        return Promise.reject('Invalid view data for an image.');
+      }
+
+      const unixFilePath = uploadedImage.path.replace(/\\/g, '/');
+
+      // Save the uploaded image data to the database using the Images model within the transaction
+      return Images.create({
+        productId,
+        categoryId,
+        view,
+        image_url: unixFilePath,
+      }, { transaction });
+    }));
+
+    // Commit the transaction if everything succeeds
+    await transaction.commit();
+
+    res.status(200).json({ message: 'Product and images updated successfully.', data: { product, images: savedImages } });
   } catch (error) {
     console.error('Error:', error);
 
@@ -332,8 +354,158 @@ router.post('/save', upload.array('image', 5), async (req, res) => {
 });
 
 
-
-
-
-
 module.exports = router;
+
+
+// router.get("/", async (req, res) => {
+//   try {
+//     const productData = await sequelize.query(`
+//       SELECT 
+//         p.id,
+//         p.productName,
+//         p.price,
+//         p.stock,
+//         c.categoryName AS category,
+//         sc.subcategoryName AS subCategory,
+//         CONCAT('http://localhost:5000/', (SELECT image_url FROM Images WHERE productId = p.id AND view = 'top')) AS top_view,
+//         CONCAT('http://localhost:5000/', (SELECT image_url FROM Images WHERE productId = p.id AND view = 'front')) AS front_view
+//       FROM 
+//         Product AS p
+//       LEFT JOIN 
+//         Category AS c ON p.categoryId = c.id
+//       LEFT JOIN 
+//         SubCategory AS sc ON p.subCategoryId = sc.id
+//   `, { type: sequelize.QueryTypes.SELECT });
+  
+//     if (!productData || productData.length === 0) {
+//       return res.status(404).json({ message: "No product data found." });
+//     }
+
+//     if (!productData || productData.length === 0) {
+//       return res.status(404).json({ message: "No product data found." });
+//     }
+
+//     res.json(productData);
+//   } catch (err) {
+//     console.error(err); // Log the error for debugging
+//     res.status(500).json({ message: "Internal server error." });
+//   }
+// });
+
+
+
+// // GET request with id: retrieves data for product with this given id.
+// // Also retrieves the associated category, and all the associated tags.
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const productData = await Product.findByPk(req.params.id, {
+//       include: [{ model: Category }, { model: Tag }],
+//     });
+
+//     if (!productData) {
+//       return res
+//         .status(404)
+//         .json({ message: "No product found with this ID." });
+//     }
+
+//     res.status(200).json(productData);
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// });
+
+
+
+// // DELETE request with id: destroys the data for the product with this id.
+// router.delete("/:id", async (req, res) => {
+//   try {
+//     const productData = await Product.destroy({
+//       where: { id: req.params.id }
+//     });
+
+//     if (!productData) {
+//       return res
+//         .status(404)
+//         .json({ message: "No product with this data to delete." });
+//     }
+
+//     res.status(200).json(productData);
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// });
+
+
+
+
+
+
+
+
+
+// router.post('/', upload.array('image', 5), async (req, res) => {
+//   const transaction = await sequelize.transaction();
+
+//   try {
+//     const { categoryId, views } = req.body;
+//     const uploadedImages = req.files;
+
+//     // Check if required fields are provided
+//     if (!uploadedImages || !views) {
+//       return res.status(400).json({ message: 'Invalid request data.' });
+//     }
+
+//     // Split the views and project details strings into arrays
+//     const viewsArray = views.split(',');
+
+//     // Check if the number of views matches the number of uploaded images
+//     if (viewsArray.length !== uploadedImages.length) {
+//       return res.status(400).json({ message: 'Number of views does not match the number of uploaded images.' });
+//     }
+
+//     // Save the product details directly from req.body within the transaction
+//     const savedProduct = await Product.create(
+//       req.body ,
+//       { transaction }
+//     );
+//     const productId = savedProduct.id; // Get the generated productId
+
+//     // Process each uploaded image along with its view type and project detail within the transaction
+//     const savedImages = await Promise.all(uploadedImages.map((uploadedImage, index) => {
+//       const view = viewsArray[index];
+
+//       if (!view || isNaN(index) || index < 0) {
+//         return Promise.reject('Invalid view data for an image.');
+//       }
+
+//       const unixFilePath = uploadedImage.path.replace(/\\/g, '/');
+
+//       // Save the uploaded image data to the database using the Images model within the transaction
+//       return Images.create({
+//         productId: productId,
+//         categoryId,
+//         view,
+//         image_url: unixFilePath,
+//       }, { transaction });
+//     }));
+
+//     // Commit the transaction if everything succeeds
+//     await transaction.commit();
+
+//     res.status(200).json({ message: 'Images uploaded successfully.', data: savedImages });
+//   } catch (error) {
+//     console.error('Error:', error);
+
+//     // Rollback the transaction if an error occurs
+//     await transaction.rollback();
+
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// });
+
+
+
+
+
+
+// module.exports = router;

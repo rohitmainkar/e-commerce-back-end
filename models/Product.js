@@ -1,12 +1,13 @@
-// import important parts of sequelize library
 const { Model, DataTypes } = require('sequelize');
-// import our database connection from config.js
 const sequelize = require('../config/connection');
+const {Category,SubCategory} = require('./Category');
 
-// Initialize Product model (table) by extending off Sequelize's Model class
+const Tag = require('./Tag');
+const ProductTag = require('./ProductTag');
+const Images = require('./Images');
+
 class Product extends Model {}
 
-// set up fields and rules for Product model
 Product.init(
   {
     id: {
@@ -15,20 +16,43 @@ Product.init(
       primaryKey: true,
       autoIncrement: true
     },
-
-    product_name: {
+    productName: {
       type: DataTypes.STRING,
       allowNull: false
     },
-
+    categoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Category,
+        key: 'id'
+      }
+    },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: SubCategory,
+        key: 'id'
+      }
+    },
     price: {
       type: DataTypes.DECIMAL,
-      allowNull:false,
+      allowNull: false,
       validate: {
         isDecimal: true
       }
     },
-
+    originPrice: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    discountPrice: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    discountPercentage: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     stock: {
       type: DataTypes.INTEGER,
       defaultValue: 10,
@@ -36,33 +60,55 @@ Product.init(
         isNumeric: true
       }
     },
-
-    stars:{
+    stars: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    descr: {
       type: DataTypes.STRING,
       allowNull: true
     },
 
-    descr:{
-      type: DataTypes.STRING,
+    isNew: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
+    },
+    isHot: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
+    },
+    isBestSaller: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
+    },
+    isFreeShipping: {
+      type: DataTypes.BOOLEAN,
       allowNull: true
     },
     
-    category_id: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'category',
-        key: 'id',
-        unique: false
-      }    }
   },
   {
     sequelize,
-    timestamps: false,
+    timestamps: true, // Enable timestamps
+    createdAt: 'createdAt', // Define createdAt field
+    updatedAt: 'updatedAt', // Define updatedAt field
     freezeTableName: true,
-    underscored: true,
-    modelName: 'product',
+    modelName: 'product'
   }
-  
 );
+
+// Products belongsTo Category
+Product.belongsTo(Category, {
+  foreignKey: 'categoryId'
+});
+
+// Categories have many Products
+Category.hasMany(Product, {
+  foreignKey: 'categoryId',
+  onDelete: 'CASCADE'
+});
+
+Product.hasMany(Images, { onDelete: 'CASCADE' });
+Images.belongsTo(Product);
 
 module.exports = Product;

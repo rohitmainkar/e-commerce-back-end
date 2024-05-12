@@ -9,11 +9,11 @@ Images.init ({
     primaryKey: true,
     autoIncrement: true,
   },
-  product_id: { // Change to match the column name in your database
+  productId: { // Change to match the column name in your database
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  category_id: { // Change to match the column name in your database
+  categoryId: { // Change to match the column name in your database
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -31,7 +31,6 @@ Images.init ({
   sequelize,
   timestamps: false,
   freezeTableName: true,
-  underscored: true,
   modelName: 'Images',
 });
 

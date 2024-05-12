@@ -20,6 +20,7 @@ router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
 
 
 router.use((req, res) => {
+  res.status(400)
   res.send("<h1>Wrong Route!</h1>")
 });
 
