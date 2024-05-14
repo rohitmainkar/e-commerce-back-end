@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
-const {Category,SubCategory} = require('./Category');
+const {Category,SubCategory} = require('./category');
 
 const Tag = require('./Tag');
 const ProductTag = require('./ProductTag');
